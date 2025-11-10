@@ -39,7 +39,7 @@ export async function updateTask(req, res) {
     if (!updateTask) {
       return res.status(404).json({ message: "Not exist" });
     }
-    res.status(200).json(updateTask);
+    res.status(200).json(updatedTask);
   } catch (error) {
     console.error("Error when calling updateTask: ", error);
     res.status(500).json({ message: "system error" });
