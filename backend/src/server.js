@@ -1,10 +1,18 @@
 import express from "express";
 import taskRoute from "./routes/tasksRoutes.js";
+import { connectDB } from "./config/db.js";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const PORT = process.env.PORT || 5001
 
 const app = express();
 
+connectDB();
+
 app.use("/api/tasks", taskRoute);
 
-app.listen(5001, () => {
-  console.log("Server start in 5001 PORT");
+app.listen(PORT, () => {
+  console.log(`Server start in PORT ${PORT}`);
 });
