@@ -14,7 +14,7 @@ function Footer({ completedTasksCount = 0, activeTasksCount = 0 }) {
             )}
 
             {completedTasksCount === 0 && activeTasksCount > 0 && (
-              <>Let's get started {activeTasksCount} tasks!</>
+              <>Let's get started with {activeTasksCount} tasks!</>
             )}
           </p>
         </div>
