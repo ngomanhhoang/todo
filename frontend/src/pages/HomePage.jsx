@@ -7,7 +7,7 @@ import TaskList from "@/components/TaskList";
 import TaskListPagination from "@/components/TaskListPagination";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
-import axios from "axios";
+import api from "@/lib/axios";
 
 function HomePage() {
   const [taskBuffer, setTaskBuffer] = useState([]);
@@ -21,7 +21,7 @@ function HomePage() {
 
   async function fetchTasks() {
     try {
-      const res = await axios.get("http://localhost:5001/api/tasks");
+      const res = await api.get("/tasks");
       setTaskBuffer(res.data.tasks);
       setActiveTaskCount(res.data.activeCount);
       setCompleteTaskCount(res.data.completeCount);
@@ -29,6 +29,10 @@ function HomePage() {
       console.error("An error occurred while retrieving tasks:", error);
       toast.error("An error occurred while retrieving tasks.");
     }
+  }
+
+  function handleTaskChanged() {
+    fetchTasks();
   }
 
   const filteredTask = taskBuffer.filter((task) => {
@@ -59,7 +63,7 @@ function HomePage() {
           <Header />
 
           {/* CREATE TASK  */}
-          <AddTask />
+          <AddTask handleNewTaskAdded={handleTaskChanged} />
 
           {/* STATISTICS AND FILTERS */}
           <StatsAndFilters
@@ -70,7 +74,7 @@ function HomePage() {
           />
 
           {/* TASK LIST */}
-          <TaskList filteredTasks={filteredTask} filter={filter} />
+          <TaskList filteredTasks={filteredTask} filter={filter} handleTaskChanged={handleTaskChanged}/>
 
           {/* PAGINATION */}
           <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">

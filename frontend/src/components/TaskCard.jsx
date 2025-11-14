@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card } from "./ui/card";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
@@ -10,9 +10,64 @@ import {
   Trash2,
 } from "lucide-react";
 import { Input } from "./ui/input";
+import api from "@/lib/axios";
+import { toast } from "sonner";
 
-function TaskCard({ task, index }) {
-  let isEditing = false;
+function TaskCard({ task, index, handleTaskChanged }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [updateTaskTitle, setUpdateTaskTitle] = useState(task.title || "");
+
+  async function deleteTask(taskId) {
+    try {
+      await api.delete(`/tasks/${taskId}`);
+      toast.success("Task has been deleted");
+      handleTaskChanged();
+    } catch (error) {
+      console.error("Error when deleting task", error);
+      toast.error("Error when deleting task");
+    }
+  }
+  async function updateTask() {
+    try {
+      setIsEditing(false);
+      await api.put(`/tasks/${task._id}`, {
+        title: updateTaskTitle,
+      });
+      toast.success(`Task has been changed to ${updateTaskTitle}`);
+      handleTaskChanged();
+    } catch (error) {
+      console.error("Error when updating task", error);
+      toast.error("Error when updating task");
+    }
+  }
+
+  async function toggleTaskCompleteButton() {
+    try {
+      if (task.status === "active") {
+        await api.put(`/tasks/${task._id}`, {
+          status: "completed",
+          completedAt: new Date().toISOString(),
+        });
+        toast.success(`${task.title} has been completed`);
+      } else {
+        await api.put(`/tasks/${task._id}`, {
+          status: "active",
+          completedAt: null,
+        });
+        toast.success(`${task.title} has been changed to unfinished`);
+      }
+      handleTaskChanged(); 
+    } catch (error) {
+      console.error("Error when changing task", error);
+      toast.error("Error when changing task");
+    }
+  }
+
+  function handleKeyPress(e) {
+    if (e.key === "Enter") {
+      updateTask();
+    }
+  }
   return (
     <Card
       className={cn(
@@ -31,6 +86,7 @@ function TaskCard({ task, index }) {
               ? "text-success hover:text-success/80"
               : "text-muted-foreground hover:text-primary"
           )}
+          onClick={toggleTaskCompleteButton}
         >
           {task.status === "completed" ? (
             <CheckCircle2 className="size-5" />
@@ -46,6 +102,13 @@ function TaskCard({ task, index }) {
               placeholder="What to do ?"
               className="flex-1 h-12 text-base border-border/50 focus:border-primary/50 focus:ring-primary/20"
               type="text"
+              value={updateTaskTitle}
+              onChange={(e) => setUpdateTaskTitle(e.target.value)}
+              onKeyPress={handleKeyPress}
+              onBlur={() => {
+                setIsEditing(false);
+                setUpdateTaskTitle(task.title || "");
+              }}
             />
           ) : (
             <p
@@ -83,6 +146,10 @@ function TaskCard({ task, index }) {
             variant="ghost"
             size="icon"
             className="shrink-0 transition-colors size-8 text-muted-foreground hover:text-info"
+            onClick={() => {
+              setIsEditing(true);
+              setUpdateTaskTitle(task.title || "");
+            }}
           >
             <SquarePen className="size-4" />
           </Button>
@@ -91,6 +158,7 @@ function TaskCard({ task, index }) {
             variant="ghost"
             size="icon"
             className="shrink-0 transition-colors size-8 text-muted-foreground hover:text-destructive"
+            onClick={() => deleteTask(task._id)}
           >
             <Trash2 className="size-4" />
           </Button>
