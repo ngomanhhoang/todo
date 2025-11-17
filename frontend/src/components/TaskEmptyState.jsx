@@ -2,7 +2,7 @@ import React from "react";
 import { Card } from "./ui/card";
 import { Circle } from "lucide-react";
 
-function TaskEmptyState(filter) {
+function TaskEmptyState({ filter }) {
   return (
     <Card className="p-8 text-center border-0 bg-gradient-card shadow-custom-md">
       <div className="space-y-3">

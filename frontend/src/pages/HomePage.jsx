@@ -8,17 +8,23 @@ import TaskListPagination from "@/components/TaskListPagination";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import api from "@/lib/axios";
+import { visibleTaskLimit } from "@/lib/data";
 
 function HomePage() {
   const [taskBuffer, setTaskBuffer] = useState([]);
   const [activeTaskCount, setActiveTaskCount] = useState(0);
   const [completeTaskCount, setCompleteTaskCount] = useState(0);
   const [filter, setFilter] = useState("all");
-  const [dateQuery, setDateQuery] = useState('today')
+  const [dateQuery, setDateQuery] = useState("today");
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     fetchTasks();
   }, [dateQuery]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filter, dateQuery]);
 
   async function fetchTasks() {
     try {
@@ -26,6 +32,7 @@ function HomePage() {
       setTaskBuffer(res.data.tasks);
       setActiveTaskCount(res.data.activeCount);
       setCompleteTaskCount(res.data.completeCount);
+      
     } catch (error) {
       console.error("An error occurred while retrieving tasks:", error);
       toast.error("An error occurred while retrieving tasks.");
@@ -36,6 +43,22 @@ function HomePage() {
     fetchTasks();
   }
 
+  function handleNext() {
+    if (page < totalPages) {
+      setPage((prev) => prev + 1);
+    }
+  }
+
+  function handlePrev() {
+    if (page > 1) {
+      setPage((prev) => prev - 1);
+    }
+  }
+
+  function handlePageChange(newPage) {
+    setPage(newPage);
+  }
+
   const filteredTask = taskBuffer.filter((task) => {
     switch (filter) {
       case "active":
@@ -43,9 +66,21 @@ function HomePage() {
       case "completed":
         return task.status === "complete";
       default:
-        return true;
+        return true; 
     }
   });
+  
+
+  const visibleTasks = filteredTask.slice(
+    (page - 1) * visibleTaskLimit,
+    page * visibleTaskLimit
+  );
+
+  if (visibleTasks.length === 0) {
+    handlePrev();
+  }
+
+  const totalPages = Math.ceil(filteredTask.length / visibleTaskLimit);
 
   return (
     <div className="min-h-screen w-full bg-[#fefcff] relative">
@@ -75,12 +110,22 @@ function HomePage() {
           />
 
           {/* TASK LIST */}
-          <TaskList filteredTasks={filteredTask} filter={filter} handleTaskChanged={handleTaskChanged}/>
+          <TaskList
+            filteredTasks={visibleTasks}
+            filter={filter}
+            handleTaskChanged={handleTaskChanged}
+          />
 
           {/* PAGINATION */}
           <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
-            <TaskListPagination />
-            <DateTimeFilter dateQuery={dateQuery} setDateQuery={setDateQuery}/>
+            <TaskListPagination
+              handleNext={handleNext}
+              handlePrev={handlePrev}
+              handlePageChange={handlePageChange}
+              page={page}
+              totalPages={totalPages}
+            />
+            <DateTimeFilter dateQuery={dateQuery} setDateQuery={setDateQuery} />
           </div>
 
           {/* FOOTER */}
